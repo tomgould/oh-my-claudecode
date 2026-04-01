@@ -22,7 +22,7 @@ The `swarm` compatibility alias was removed in #1131.
 ### Parameters
 
 - **N** - Number of teammate agents (1-20). Optional; defaults to auto-sizing based on task decomposition.
-- **agent-type** - OMC agent to spawn for the `team-exec` stage (e.g., executor, debugger, designer, codex, gemini). Optional; defaults to stage-aware routing. Use `codex` to spawn Codex CLI workers or `gemini` for Gemini CLI workers (requires respective CLIs installed). See Stage Agent Routing below.
+- **agent-type** - OMC agent to spawn for the `team-exec` stage (e.g., executor, debugger, codex, gemini). Optional; defaults to stage-aware routing. Use `codex` to spawn Codex CLI workers or `gemini` for Gemini CLI workers (requires respective CLIs installed). See Stage Agent Routing below.
 - **task** - High-level task to decompose and distribute among teammates
 - **ralph** - Optional modifier. When present, wraps the team pipeline in Ralph's persistence loop (retry on failure, architect verification before completion). See Team + Ralph Composition below.
 
@@ -31,7 +31,7 @@ The `swarm` compatibility alias was removed in #1131.
 ```bash
 /team 5:executor "fix all TypeScript errors across the project"
 /team 3:debugger "fix build errors in src/"
-/team 4:designer "implement responsive layouts for all page components"
+/team 4:executor "implement responsive layouts for all page components"
 /team "refactor the auth module with security review"
 /team ralph "build a complete REST API for user management"
 # With Codex CLI workers (requires: npm install -g @openai/codex)
@@ -101,28 +101,28 @@ Each pipeline stage uses **specialized agents** -- not just executors. The lead 
 
 | Stage | Required Agents | Optional Agents | Selection Criteria |
 |-------|----------------|-----------------|-------------------|
-| **team-plan** | `explore` (haiku), `planner` (opus) | `analyst` (opus), `architect` (opus) | Use `analyst` for unclear requirements. Use `architect` for systems with complex boundaries. |
-| **team-prd** | `analyst` (opus) | `critic` (opus) | Use `critic` to challenge scope. |
-| **team-exec** | `executor` (sonnet) | `executor` (opus), `debugger` (sonnet), `designer` (sonnet), `writer` (haiku), `test-engineer` (sonnet) | Match agent to subtask type. Use `executor` (model=opus) for complex autonomous work, `designer` for UI, `debugger` for compilation issues, `writer` for docs, `test-engineer` for test creation. |
-| **team-verify** | `verifier` (sonnet) | `test-engineer` (sonnet), `security-reviewer` (sonnet), `code-reviewer` (opus) | Always run `verifier`. Add `security-reviewer` for auth/crypto changes. Add `code-reviewer` for >20 files or architectural changes. `code-reviewer` also covers style/formatting checks. |
+| **team-plan** | `explore` (haiku), `planner` (opus) | `architect` (opus) | Use `architect` for systems with complex boundaries. |
+| **team-prd** | `planner` (opus) | `code-reviewer` (opus) | Use `code-reviewer` to challenge scope. |
+| **team-exec** | `executor` (sonnet) | `executor` (opus), `debugger` (sonnet), `test-engineer` (sonnet) | Match agent to subtask type. Use `executor` (model=opus) for complex autonomous work, `debugger` for compilation issues, `test-engineer` for test creation. |
+| **team-verify** | `verifier` (sonnet) | `test-engineer` (sonnet), `code-reviewer` (opus) | Always run `verifier`. Add `code-reviewer` for >20 files, architectural, or security-sensitive changes. |
 | **team-fix** | `executor` (sonnet) | `debugger` (sonnet), `executor` (opus) | Use `debugger` for type/build errors and regression isolation. Use `executor` (model=opus) for complex multi-file fixes. |
 
 **Routing rules:**
 
 1. **The lead picks agents per stage, not the user.** The user's `N:agent-type` parameter only overrides the `team-exec` stage worker type. All other stages use stage-appropriate specialists.
-2. **Specialist agents complement executor agents.** Route analysis/review to architect/critic Claude agents and UI work to designer agents. Tmux CLI workers are one-shot and don't participate in team communication.
+2. **Specialist agents complement executor agents.** Route analysis/review to architect/code-reviewer Claude agents. Tmux CLI workers are one-shot and don't participate in team communication.
 3. **Cost mode affects model tier.** In downgrade: `opus` agents to `sonnet`, `sonnet` to `haiku` where quality permits. `team-verify` always uses at least `sonnet`.
-4. **Risk level escalates review.** Security-sensitive or >20 file changes must include `security-reviewer` + `code-reviewer` (opus) in `team-verify`.
+4. **Risk level escalates review.** Security-sensitive or >20 file changes must include `code-reviewer` (opus) in `team-verify`.
 
 ### Stage Entry/Exit Criteria
 
 - **team-plan**
   - Entry: Team invocation is parsed and orchestration starts.
-  - Agents: `explore` scans codebase, `planner` creates task graph, optionally `analyst`/`architect` for complex tasks.
+  - Agents: `explore` scans codebase, `planner` creates task graph, optionally `architect` for complex tasks.
   - Exit: decomposition is complete and a runnable task graph is prepared.
 - **team-prd**
   - Entry: scope is ambiguous or acceptance criteria are missing.
-  - Agents: `analyst` extracts requirements, optionally `critic`.
+  - Agents: `planner` extracts requirements, optionally `code-reviewer`.
   - Exit: acceptance criteria and boundaries are explicit.
 - **team-exec**
   - Entry: `TeamCreate`, `TaskCreate`, assignment, and worker spawn are complete.
@@ -624,8 +624,7 @@ Tmux CLI workers run in dedicated tmux panes with filesystem access. They are **
 | Code review / security audit | CLI worker or specialist agent | Autonomous execution, good at structured analysis |
 | Architecture analysis / planning | architect Claude agent | Strong analytical reasoning with codebase access |
 | Refactoring (well-scoped) | CLI worker or executor agent | Autonomous execution, good at structured transforms |
-| UI/frontend implementation | designer Claude agent | Design expertise, framework idioms |
-| Large-scale documentation | writer Claude agent | Writing expertise + large context for consistency |
+| UI/frontend implementation | executor Claude agent | Implementation expertise, framework idioms |
 | Build/test iteration loops | Claude teammate | Needs Bash tool + iterative fix cycles |
 | Tasks needing team coordination | Claude teammate | Needs SendMessage for status updates |
 
@@ -637,12 +636,12 @@ Tmux CLI workers run in dedicated tmux panes with filesystem access. They are **
 Task decomposition:
 #1 [codex_worker] Security review of current auth code -> output to .omc/research/auth-security.md
 #2 [codex_worker] Refactor auth/login.ts and auth/session.ts (uses #1 findings)
-#3 [claude_worker:designer] Redesign auth UI components (login form, session indicator)
+#3 [claude_worker:executor] Redesign auth UI components (login form, session indicator)
 #4 [claude_worker] Update auth tests + fix integration issues
 #5 [gemini_worker] Final code review of all changes
 ```
 
-The lead runs #1 (Codex security analysis), then #2 and #3 in parallel (Codex refactors backend, designer agent redesigns frontend), then #4 (Claude teammate handles test iteration), then #5 (Gemini final review).
+The lead runs #1 (Codex security analysis), then #2 and #3 in parallel (Codex refactors backend, executor agent redesigns frontend), then #4 (Claude teammate handles test iteration), then #5 (Gemini final review).
 
 ### Pre-flight Analysis (Optional)
 

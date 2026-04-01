@@ -39,9 +39,7 @@ By default, ralph operates in PRD mode. A scaffold `prd.json` is auto-generated 
 
 **Opt-out:** If `{{PROMPT}}` contains `--no-prd`, skip PRD generation and work in legacy mode (no story tracking, generic verification). Use this for trivial quick fixes.
 
-**Deslop opt-out:** If `{{PROMPT}}` contains `--no-deslop`, skip the mandatory post-review deslop pass entirely. Use this only when the cleanup pass is intentionally out of scope for the run.
-
-**Reviewer selection:** Pass `--critic=architect`, `--critic=critic`, or `--critic=codex` in the Ralph prompt to choose the completion reviewer for that run. `architect` remains the default.
+**Reviewer selection:** Pass `--critic=architect`, `--critic=code-reviewer`, or `--critic=codex` in the Ralph prompt to choose the completion reviewer for that run. `architect` remains the default.
 </PRD_Mode>
 
 <Execution_Policy>
@@ -93,31 +91,20 @@ By default, ralph operates in PRD mode. A scaffold `prd.json` is auto-generated 
    - <5 files, <100 lines with full tests: STANDARD tier minimum (architect-medium / Sonnet)
    - Standard changes: STANDARD tier (architect-medium / Sonnet)
    - >20 files or security/architectural changes: THOROUGH tier (architect / Opus)
-   - If `--critic=critic`, use the Claude `critic` agent for the approval pass
-   - If `--critic=codex`, run `omc ask codex --agent-prompt critic "..."` for the approval pass
+   - If `--critic=code-reviewer`, use the Claude `code-reviewer` agent for the approval pass
+   - If `--critic=codex`, run `omc ask codex --agent-prompt code-reviewer "..."` for the approval pass
    - Ralph floor: always at least STANDARD, even for small changes
    - The selected reviewer verifies against the SPECIFIC acceptance criteria from prd.json, not vague "is it done?"
 
-7.5 **Mandatory Deslop Pass**:
-   - Unless `{{PROMPT}}` contains `--no-deslop`, run `oh-my-claudecode:ai-slop-cleaner` in standard mode (not `--review`) on the files changed during the current Ralph session only.
-   - Keep the scope bounded to the Ralph changed-file set; do not broaden the cleanup pass to unrelated files.
-   - If the reviewer approved the implementation but the deslop pass introduces follow-up edits, keep those edits inside the same changed-file scope before proceeding.
-
-7.6 **Regression Re-verification**:
-   - After the deslop pass, re-run all relevant tests, build, and lint checks for the Ralph session.
-   - Read the output and confirm the post-deslop regression run actually passes.
-   - If regression fails, roll back the cleaner changes or fix the regression, then rerun the verification loop until it passes.
-   - Only proceed to completion after the post-deslop regression run passes (or `--no-deslop` was explicitly specified).
-
-8. **On approval**: After Step 7.6 passes (with Step 7.5 completed, or skipped via `--no-deslop`), run `/oh-my-claudecode:cancel` to cleanly exit and clean up all state files
+8. **On approval**: Run `/oh-my-claudecode:cancel` to cleanly exit and clean up all state files
 
 9. **On rejection**: Fix the issues raised, re-verify with the same reviewer, then loop back to check if the story needs to be marked incomplete
 </Steps>
 
 <Tool_Usage>
 - Use `Task(subagent_type="oh-my-claudecode:architect", ...)` for architect verification cross-checks when changes are security-sensitive, architectural, or involve complex multi-system integration
-- Use `Task(subagent_type="oh-my-claudecode:critic", ...)` when `--critic=critic`
-- Use `omc ask codex --agent-prompt critic "..."` when `--critic=codex`
+- Use `Task(subagent_type="oh-my-claudecode:code-reviewer", ...)` when `--critic=code-reviewer`
+- Use `omc ask codex --agent-prompt code-reviewer "..."` when `--critic=codex`
 - Skip architect consultation for simple feature additions, well-tested changes, or time-critical verification
 - Proceed with architect agent verification alone -- never block on unavailable tools
 - Use `state_write` / `state_read` for ralph mode state persistence between iterations
@@ -205,8 +192,6 @@ Why bad: Did not refine scaffold criteria into task-specific ones. This is PRD t
 - [ ] lsp_diagnostics shows 0 errors on affected files
 - [ ] progress.txt records implementation details and learnings
 - [ ] Selected reviewer verification passed against specific acceptance criteria
-- [ ] ai-slop-cleaner pass completed on changed files (or `--no-deslop` specified)
-- [ ] Post-deslop regression tests pass
 - [ ] `/oh-my-claudecode:cancel` run for clean state cleanup
 </Final_Checklist>
 

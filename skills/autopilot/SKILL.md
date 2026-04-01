@@ -38,9 +38,9 @@ Most non-trivial software tasks require coordinated phases: understanding requir
 <Steps>
 1. **Phase 0 - Expansion**: Turn the user's idea into a detailed spec
    - **If ralplan consensus plan exists** (`.omc/plans/ralplan-*.md` or `.omc/plans/consensus-*.md` from the 3-stage pipeline): Skip BOTH Phase 0 and Phase 1 — jump directly to Phase 2 (Execution). The plan has already been Planner/Architect/Critic validated.
-   - **If deep-interview spec exists** (`.omc/specs/deep-interview-*.md`): Skip analyst+architect expansion, use the pre-validated spec directly as Phase 0 output. Continue to Phase 1 (Planning).
+   - **If deep-interview spec exists** (`.omc/specs/deep-interview-*.md`): Skip planner+architect expansion, use the pre-validated spec directly as Phase 0 output. Continue to Phase 1 (Planning).
    - **If input is vague** (no file paths, function names, or concrete anchors): Offer redirect to `/deep-interview` for Socratic clarification before expanding
-   - **Otherwise**: Analyst (Opus) extracts requirements, Architect (Opus) creates technical specification
+   - **Otherwise**: Planner (Opus) extracts requirements, Architect (Opus) creates technical specification
    - Output: `.omc/autopilot/spec.md`
 
 2. **Phase 1 - Planning**: Create an implementation plan from the spec
@@ -62,8 +62,7 @@ Most non-trivial software tasks require coordinated phases: understanding requir
 
 5. **Phase 4 - Validation**: Multi-perspective review in parallel
    - Architect: Functional completeness
-   - Security-reviewer: Vulnerability check
-   - Code-reviewer: Quality review
+   - Code-reviewer: Quality and security review
    - All must approve; fix and re-validate on rejection
 
 6. **Phase 5 - Cleanup**: Delete all state files on successful completion
@@ -73,8 +72,7 @@ Most non-trivial software tasks require coordinated phases: understanding requir
 
 <Tool_Usage>
 - Use `Task(subagent_type="oh-my-claudecode:architect", ...)` for Phase 4 architecture validation
-- Use `Task(subagent_type="oh-my-claudecode:security-reviewer", ...)` for Phase 4 security review
-- Use `Task(subagent_type="oh-my-claudecode:code-reviewer", ...)` for Phase 4 quality review
+- Use `Task(subagent_type="oh-my-claudecode:code-reviewer", ...)` for Phase 4 quality and security review
 - Agents form their own analysis first, then spawn Claude Task agents for cross-validation
 - Never block on external tools; proceed with available agents if delegation fails
 </Tool_Usage>
