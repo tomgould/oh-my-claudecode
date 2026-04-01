@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
-  "name": "omc",
-  "description": "Claude Code native multi-agent orchestration - intelligent model routing, 28 agents, 32 skills",
+  "name": "omc-lite",
+  "description": "OMC-Lite: lightweight multi-agent orchestration - 8 agents, 9 skills, minimal hooks",
   "owner": {
     "name": "Yeachan Heo",
     "email": "hurrc04@gmail.com"
@@ -9,8 +9,8 @@
   "plugins": [
     {
       "name": "oh-my-claudecode",
-      "description": "Claude Code native multi-agent orchestration with intelligent model routing, 28 agent variants, and 32 powerful skills. Zero learning curve. Maximum power.",
-      "version": "4.9.3",
+      "description": "OMC-Lite: token-efficient multi-agent orchestration with 8 focused agents and 9 essential skills.",
+      "version": "4.9.3-tg.1",
       "author": {
         "name": "Yeachan Heo",
         "email": "hurrc04@gmail.com"
@@ -27,5 +27,5 @@
       ]
     }
   ],
-  "version": "4.9.3"
+  "version": "4.9.3-tg.1"
 }

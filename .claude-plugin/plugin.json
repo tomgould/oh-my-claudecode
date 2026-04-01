@@ -1,12 +1,12 @@
 {
   "name": "oh-my-claudecode",
-  "version": "4.9.3",
-  "description": "Multi-agent orchestration system for Claude Code",
+  "version": "4.9.3-tg.1",
+  "description": "OMC-Lite: token-efficient multi-agent orchestration for professional development",
   "author": {
-    "name": "oh-my-claudecode contributors"
+    "name": "Tom Gould (fork of oh-my-claudecode)"
   },
-  "repository": "https://github.com/Yeachan-Heo/oh-my-claudecode",
-  "homepage": "https://github.com/Yeachan-Heo/oh-my-claudecode",
+  "repository": "https://github.com/tomgould/oh-my-claudecode",
+  "homepage": "https://github.com/tomgould/oh-my-claudecode",
   "license": "MIT",
   "keywords": [
     "claude-code",
